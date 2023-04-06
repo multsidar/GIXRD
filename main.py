@@ -33,7 +33,7 @@ intensity = lambda a: fp(a) * tau(a) / math.sin(math.radians(a) * 2)
 
 
 #lhotka
-l_intensity_tf = lambda a: c * (math.sin(math.radians(theta + a) / (math.sin(math.radians(theta - a) + math.sin(math.radians(theta + a)))))) * \
+l_intensity_tf = lambda a: c * (math.sin(math.radians(theta - a) / (math.sin(math.radians(theta - a) + math.sin(math.radians(theta + a)))))) * \
                            (math.exp(-m_TiN * t * (math.sin(math.radians(theta + a)) ** -1 + math.sin(math.radians(theta - a)) ** -1)))
 
 
