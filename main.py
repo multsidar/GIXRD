@@ -53,26 +53,9 @@ theta =42
 c = 134
 t = 0.31
 m_TiN = 3.5 * 10 ** -2
-# data##################################################################################################################
-'''
-
-#argon_df = pd.DataFrame(pd.read_excel('EP_1003_1000.xlsx', sheet_name='Argon', usecols='C:I', header=39, nrows=8).values)
-#alpha = list(map(float,argon_df[0].values))
-#net_area_2_10_11 = list(map(float,argon_df[5].values))
 
 
-#argon_df2 = pd.DataFrame(pd.read_excel('EP_1003_1000.xlsx', sheet_name='Krypton', usecols='C:I', header=42, nrows=8).values)
-#net_area_2_10_12 = list(map(float,argon_df2[5].values))
 
-
-#argon_df3 = pd.DataFrame(pd.read_excel('EP_1003_1000.xlsx', sheet_name='Xenon', usecols='C:I', header=44, nrows=8).values)
-#net_area_6_10_10 = list(map(float,argon_df3[5].values))
-
-
-#argon_df4 = pd.DataFrame(pd.read_excel('EP_1003_1000.xlsx',sheet_name=name,usecols='C:I',header=44,nrows=8).values)
-#net_area_6_10_11 = list(map(float,argon_df4[5].values))
-
-'''
 # Графики ##############################################################################################################
 value = np.empty([len(a)], float)
 value1 = np.empty([len(a)], float)
@@ -83,10 +66,6 @@ for i, t in enumerate(a):
 
 plt.subplots(1)
 plt.plot(a, value,label='theory')
-#plt.plot(alpha,net_area_2_10_11,'o',label='Argon')
-#plt.plot(alpha,net_area_2_10_12,'o',label='Krypton')
-#plt.plot(alpha,net_area_6_10_10,'o',label='Xenon')
-#plt.plot(alpha,net_area_6_10_11,'o',label='6_10_11')
 plt.ylabel('Интенсивность в отн. ед.')
 plt.xlabel('Угол падения в град.')
 plt.legend()
