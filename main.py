@@ -39,6 +39,16 @@ l_intensity_tf = lambda a: c * (np.sin(np.radians(theta - a) / (np.sin(np.radian
 l_intensity_sub = lambda a:  c * (np.sin(np.radians(theta - a) / (np.sin(np.radians(theta - a) + np.sin(np.radians(a)))))) * \
                            (np.exp(-m_TiN * t * (np.sin(np.radians(a)) ** -1 + np.sin(np.radians(theta - a)) ** -1)))
 
+
+def dens(atoms,V):
+    for i in atoms:
+        density= atoms[i,0] * atoms[i,1] + density
+    return density / V /const.Avogadro
+
+
+linear_abs = lambda perc1, perc2, abs1, abs2, den: (abs1 * perc1 + abs2 * perc2) * den
+
+
 # Входные данные #########################################################################################################
 delta = 1.28 * 10 ** -5
 beta = 1.11 * 10 ** -6
