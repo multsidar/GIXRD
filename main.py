@@ -1,196 +1,162 @@
-import pandas as pd
 import numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OrdinalEncoder
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import accuracy_score
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import chi2
-#import seaborn as sns
-from sklearn.model_selection import cross_validate
-from sklearn.ensemble import RandomForestClassifier
-import matplotlib.pyplot as plt
-from sklearn.tree import plot_tree
-
-df = pd.read_csv('star_classification.csv')
-
-print(df.head())
+from matplotlib import pyplot as plt
+import pandas as pd
+from scipy.optimize import curve_fit
+import cmath
 
 
-print(df.info())
+def frenel(a):
+    a = np.radians(a)
+    return abs(2 * complex(a)/(a+cmath.sqrt(complex(a ** 2 - 2 * delta,-2*beta))))**2
+
+def tau(a):
+    return wavelen * np.sqrt(2) / (4 * np.pi) \
+              * (np.sqrt((np.radians(a) ** 2 - 2 * delta) ** 2 + 4 * beta ** 2)
+                 - (np.radians(a) ** 2 - 2 * delta)) ** -0.5
 
 
-'''
-plots=[]
-for i in ['alpha', 'delta', 'u', 'g', 'r', 'i', 'z', 'run_ID',
-        'cam_col', 'field_ID', 'spec_obj_ID', 'redshift',
-       'plate', 'MJD', 'fiber_ID']:
-    g=sns.relplot(data=df,x='obj_ID', y=i, hue='class')
-    plots.append(g);
-'''
-enc = OrdinalEncoder()
-df['class'] = enc.fit_transform(df[['class']])
-df['class'].head(10)
+def intensity_tf1_big (a,c,t ):
+    return c * tau(a) / np.sin(np.radians(a))* \
+           (np.sin(np.radians(theta_2 - a)) / (np.sin(np.radians(theta_2 - a)) + np.sin(np.radians(a)))) * \
+           (1-np.exp(- t*2 * lin_koef * (np.sin(np.radians(a)) ** -1 + np.sin(np.radians(theta_2 - a)) ** -1)))* \
+           (np.exp(- t*2 * lin_koef * (np.sin(np.radians(a)) ** -1 + np.sin(np.radians(theta_2 - a)) ** -1)))
 
 
-X = df.drop(columns=['class'])
-y = df.loc[:, ['class']]
-minmax_scale = MinMaxScaler()
-scaled = minmax_scale.fit_transform(X)
+def intensity_tf1_big1 (a,c,t ):
+    return c /(- t * lin_koef * (np.sin(np.radians(a)) ** -1 + np.sin(np.radians(theta_2 - a)) ** -1))* \
+           (np.sin(np.radians(theta_2 - a)) / (np.sin(np.radians(theta_2 - a)) + np.sin(np.radians(a)))) * \
+           (1-np.exp(- t * lin_koef * (np.sin(np.radians(a)) ** -1 + np.sin(np.radians(theta_2 - a)) ** -1)))
 
-
-feature = SelectKBest(score_func=chi2)
-feafit = feature.fit(scaled, y)
-
-
-feature_score = pd.DataFrame({
-    'feature' : X.columns,
-    'score': feafit.scores_
-})
-
-
-feature_score.sort_values(by=['score'], ascending=False, inplace=True)
-print(feature_score)
+def intensity_tf1_small (a,c,t):
+    return c * tau(a) / np.sin(np.radians(a))* \
+           (np.sin(np.radians(theta_2 - a)) / (np.sin(np.radians(theta_2 - a)) + np.sin(np.radians(a)))) * \
+           (1-np.exp(- t*2 * lin_koef * (np.sin(np.radians(a)) ** -1 + np.sin(np.radians(theta_2 - a)) ** -1)))* \
+           (np.exp(- t * 2 * lin_koef * (np.sin(np.radians(a)) ** -1 + np.sin(np.radians(theta_2 - a)) ** -1)))
 
 
 
-std = StandardScaler()
-scaled = std.fit_transform(X)
-scaled = pd.DataFrame(scaled, columns=X.columns)
-print(scaled.head())
+
+def smooth(y, box_pts):
+    box = np.ones(box_pts)/box_pts
+    y_smooth = np.convolve(y, box, mode='same')
+    return y_smooth
 
 
-data_stand = y.join(scaled)
+fp = lambda a,length,width: min(length / width * np.sin(np.radians(a)), 1)
 
 
-X = data_stand.loc[:, ['redshift', 'u', 'g', 'r', 'i', 'z']]
-y = data_stand.loc[:, 'class']
 
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
 
 
-k_neighbors = 30
-metrics = ['euclidean', 'manhattan']
+delta =3.9806 * 10 ** -5
+beta = 3.2277 * 10 ** -6
+c = 15
+t = 89
+lin_koef = 2634 * 10 ** - 7
+
+a = np.arange(0.3, 36, .01)
+wavelen = .154
+width = 0.6
+length = 20
+theta_2 = 38.5
+beta2=np.sqrt(complex(-1))*beta
+
+sheet = pd.read_excel("Ta.xlsx",usecols=[0,1,2,3])
+df = pd.DataFrame(sheet.values)
 
 
-accuracys = []
-for k in range(1, k_neighbors+1, 1):
-    accuracy_k = []
-    for metric in metrics:
-        knn = KNeighborsClassifier(n_neighbors=k, weights='distance', metric=metric)
-        knn.fit(X_train, y_train)
-        y_predict = knn.predict(X_test)
-        accuracy = accuracy_score(y_test, y_predict)
-        accuracy_k.append(accuracy)
-    accuracys.append(accuracy_k)
+angle = np.arange(0.3, 3.6, .1)
 
 
-accuracy_data = pd.DataFrame(np.array(accuracys), columns=metrics)
-k_df = pd.DataFrame([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30], columns=['k'])
-accuracy_1= k_df.join(accuracy_data)
+# облученый подложка
+z1 = list(map(float,df[3].values))
+z1 = [x for x in z1 if str(x) != 'nan']
+
+# облученый пленка
+z2 = list(map(float,df[2].values))
+z2 = [x for x in z2 if str(x) != 'nan']
+
+# Не облученный
+z3 = list(map(float,df[3].values))
+z3 = [x for x in z3 if str(x) != 'nan']
+# Графики ##############################################################################################################
+value1 = np.empty([len(a)], float)
+value2 = np.empty([len(a)], float)
+value3 = np.empty([len(a)], float)
+t1=89
+t2=89
+t3=42
+c1=0.6
+c2=1.5
+c3=1
+
+popt1, pcov1 = curve_fit(intensity_tf1_big, angle, z1)
+c1 = popt1[0]*1.
+t1=popt1[1]
 
 
-plt.plot(accuracy_1['k'], accuracy_1['euclidean'], 'o', label='euclidean')
-plt.plot(accuracy_1['k'], accuracy_1['manhattan'], 'o', label='manhattan')
+popt2, pcov2 = curve_fit(intensity_tf1_big, angle, z1)
+c2 = popt2[0]*1.0
+t2=popt2[1]
 
+popt3, pcov3 = curve_fit(intensity_tf1_big, angle, z1)
+c3 = popt3[0]*1.
+t3=popt3[1]
+
+popt4, pcov4 = curve_fit(intensity_tf1_small, angle, z1)
+c4 = popt4[0]
+t4=popt4[1]
+
+
+popt5, pcov5 = curve_fit(intensity_tf1_small, angle, z1)
+c5 = popt5[0]*0.5
+t5=popt5[1]
+
+popt6, pcov6 = curve_fit(intensity_tf1_small, angle, z1)
+c6 = popt6[0]
+t6=popt6[1]
+
+
+for i, j in enumerate(a):
+    frn=1
+    frn=(abs(frenel(j)))
+    if(fp(j,20,0.6)==1):
+        value2[i] = intensity_tf1_big(j, c2, 40)*frn
+        value3[i] = intensity_tf1_big(j, c3, 60)*frn
+    else:
+        value2[i] = intensity_tf1_big(j, c2, 40)*frn
+        value3[i] = intensity_tf1_big(j, c3, 60)*frn
+    if(fp(j,20,0.6)==1):
+        value1[i] = intensity_tf1_big(j, c1, 20)*frn
+    else:
+        value1[i] = intensity_tf1_big(j, c1, 20)*frn
+
+
+print(int(t1))
+print(int(t2))
+print(int(t3))
+print(t4)
+print(t5)
+print(t6)
+plt.subplots(1)
+plt.plot(a, smooth(value1,10), label='theory 20 nm')
+plt.plot(a, smooth(value2,10), label='approximation 40 nm')
+plt.plot(a, smooth(value3,10), label='theory 60 nm')
+
+plt.plot(angle,z1,'o',label='experiment')
+#plt.plot(angle,z2,'o')
+#plt.plot(angle,z3,'o')
+ax = plt.gca()
+ax.set_xlim([0.3, 3.6])
+
+plt.ylabel('Интенсивность в отн. ед.')
+plt.xlabel('Угол падения в град.')
 plt.legend()
-plt.xlabel('k')
-plt.ylabel('accuracy score')
+plt.grid(True)
 plt.show()
 
 
-knn = KNeighborsClassifier(n_neighbors=13, weights='distance', metric='manhattan')
-print(knn.fit(X_train, y_train))
-
-
-y_predict = knn.predict(X_test)
-print(accuracy_score(y_test, y_predict))
-
-from sklearn.tree import DecisionTreeClassifier
-dt = DecisionTreeClassifier(random_state=42)
-dt.fit(X_train, y_train)
-
-print(dt.score(X_train, y_train), dt.score(X_test, y_test))
-print(f'train: {round(dt.score(X_train, y_train) * 100, 2)}%')
-print(f'test: {round(dt.score(X_test, y_test) * 100, 2)}%')
-
-
-dt = DecisionTreeClassifier(random_state=42, max_depth=5, min_samples_split=20, min_samples_leaf=5)
-dt.fit(X_train, y_train)
-
-print(dt.score(X_train, y_train), dt.score(X_test, y_test))
-print(f'train: {round(dt.score(X_train, y_train) * 100, 2)}%')
-print(f'test: {round(dt.score(X_test, y_test) * 100, 2)}%')
-accuracy_tr = []
-par = []
-for i in range(1,9):
-    dt = DecisionTreeClassifier(random_state=i*10, max_depth=5, min_samples_split=20, min_samples_leaf=5)
-    dt.fit(X_train, y_train)
-    print('random_state='+ str(i*10) + ' max_depth=5, min_samples_split=20, min_samples_leaf=5')
-    print(dt.score(X_train, y_train), dt.score(X_test, y_test))
-    print(f'train: {round(dt.score(X_train, y_train) * 100, 2)}%')
-    print(f'test: {round(dt.score(X_test, y_test) * 100, 2)}%')
-    accuracy_tr.append(dt.score(X_test, y_test))
-    par.append(i*10)
-plt.plot(par,accuracy_tr,'o', label='random_state')
-
-accuracy_tr2 = []
-par2 = []
-for i in range(1,9):
-    dt = DecisionTreeClassifier(random_state=42, max_depth=5, min_samples_split=i*10, min_samples_leaf=5)
-    dt.fit(X_train, y_train)
-    print('min_samples_split'+ str(i*10) + ' random_state=42, max_depth=5, min_samples_leaf=5')
-    print(dt.score(X_train, y_train), dt.score(X_test, y_test))
-    print(f'train: {round(dt.score(X_train, y_train) * 100, 2)}%')
-    print(f'test: {round(dt.score(X_test, y_test) * 100, 2)}%')
-    accuracy_tr2.append(dt.score(X_test, y_test))
-    par2.append(i*10)
-plt.plot(par2,accuracy_tr2,'o',label='min_samples_split')
-
-accuracy_tr3 = []
-par3 = []
-for i in range(1,9):
-    dt = DecisionTreeClassifier(random_state=42, max_depth=5, min_samples_split=20, min_samples_leaf=i*10)
-    dt.fit(X_train, y_train)
-    print('min_samples_split'+ str(i) + ' random_state=42, max_depth=5, min_samples_split=20')
-    print(dt.score(X_train, y_train), dt.score(X_test, y_test))
-    print(f'train: {round(dt.score(X_train, y_train) * 100, 2)}%')
-    print(f'test: {round(dt.score(X_test, y_test) * 100, 2)}%')
-    accuracy_tr3.append(dt.score(X_test, y_test))
-    par3.append(i*10)
-plt.plot(par3,accuracy_tr3,'o',label='min_samples_leaf')
-plt.legend()
-
-plt.figure(figsize=(10,7))
-plot_tree(dt, max_depth=2, filled=True, feature_names=['redshift','u', 'g', 'r', 'i', 'z'])
-plt.show()
-
-from sklearn.model_selection import cross_validate
-from sklearn.ensemble import RandomForestClassifier
-
-rf = RandomForestClassifier(n_jobs=-1, random_state=42)
-
-scores = cross_validate(rf, X_train, y_train, cv=2, return_train_score=True, n_jobs=-1, verbose=2)
-
-
-print(np.mean(scores['train_score']), np.mean(scores['test_score']))
-print(f'train: {round(np.mean(scores[r"train_score"]) * 100, 2)}%')
-print(f'test: {round(np.mean(scores[r"test_score"]) * 100, 2)}%')
-
-
-dt = DecisionTreeClassifier(max_depth=3, random_state=42)
-dt.fit(X_train, y_train)
-
-print(dt.score(X_train, y_train), dt.score(X_test, y_test))
-print(f'train: {round(dt.score(X_train, y_train) * 100, 2)}%')
-print(f'test: {round(dt.score(X_test, y_test) * 100, 2)}%')
-
-plt.figure(figsize=(20,15))
-plot_tree(dt, filled=True, feature_names=['redshift','u', 'g', 'r', 'i', 'z'])
-plt.show()
 
 
 
